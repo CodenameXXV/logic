@@ -75,15 +75,32 @@
             transition: width 0.1s linear;
         }
 
-        .site-footer a {
+        .site-footer a, .sources-btn {
             color: #6366f1;
             text-decoration: none;
             transition: color 0.3s ease;
         }
 
-        .site-footer a:hover {
+        .site-footer a:hover, .sources-btn:hover {
             color: #818cf8;
             text-decoration: underline;
+        }
+
+        /* Modal Styles */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        #modal-overlay.active {
+            display: flex;
         }
     </style>
 </head>
@@ -91,6 +108,22 @@
     
     <div class="blob -top-48 -left-48"></div>
     <div class="blob -bottom-48 -right-48"></div>
+
+    <!-- Sources Modal -->
+    <div id="modal-overlay" onclick="closeSources()">
+        <div class="glass-card p-6 md:p-8 rounded-3xl max-w-lg w-full" onclick="event.stopPropagation()">
+            <h3 class="text-xl font-bold mb-4 text-white">Джерела загадок</h3>
+            <p class="text-slate-400 text-sm mb-4">Загадки взято з різних інтернет джерел, таких як:</p>
+            <ul class="space-y-2 text-sm break-all">
+                <li><a href="https://logiclike.com/uk/zagadki-na-logiku" target="_blank" class="text-indigo-400 hover:underline">logiclike.com/uk/zagadki-na-logiku</a></li>
+                <li><a href="https://dovidka.biz.ua/zagadki-na-logiku/" target="_blank" class="text-indigo-400 hover:underline">dovidka.biz.ua/zagadki-na-logiku/</a></li>
+                <li><a href="https://www.unian.ua/lite/advice/zagadki-na-logiku-zbirnik-zagadok-dlya-ditey-i-doroslih-12194361.html" target="_blank" class="text-indigo-400 hover:underline">unian.ua/lite/advice/zagadki...</a></li>
+                <li><a href="https://blog.eva.ua/35-zagadok-na-logiku-dlya-igor-z-druzyami/" target="_blank" class="text-indigo-400 hover:underline">blog.eva.ua/35-zagadok-na-logiku/</a></li>
+                <li><a href="https://tsn.ua/tsikavinki/zagadki-na-logiku-pro-vse-na-sviti-cikavi-pitannya-na-kmitlivist-2377174.html" target="_blank" class="text-indigo-400 hover:underline">tsn.ua/tsikavinki/zagadki-na-logiku...</a></li>
+            </ul>
+            <button onclick="closeSources()" class="mt-6 w-full py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-white font-medium transition-colors">Закрити</button>
+        </div>
+    </div>
 
     <main class="z-10 w-full max-w-2xl flex-grow flex flex-col justify-center">
         <header class="text-center mb-8">
@@ -151,7 +184,8 @@
     </main>
 
     <footer class="site-footer w-full py-8 text-slate-500 text-sm text-center border-t border-slate-800/50 mt-8">
-        Автор: <a href="https://codenamexxv.github.io/teacher/" target="_blank" rel="noopener">Ігор Шуляк</a><br>
+        Автор: <a href="https://codenamexxv.github.io/teacher/" target="_blank" rel="noopener">Ігор Шуляк</a> • 
+        <button onclick="openSources()" class="sources-btn">Джерела</button><br>
         © 2026 Логічні Загадки • <span id="mode-name">Класичний режим</span>
     </footer>
 
@@ -168,16 +202,16 @@
             { q: "Що можна зламати, навіть не торкаючись?", a: "Обіцянку", options: ["Скло", "Обіцянку", "Гілку", "Мовчання"] },
             { q: "Чим більше з неї береш, тим більшою вона стає?", a: "Яма", options: ["Хмара", "Яма", "Скарбничка", "Пам'ять"] },
             { q: "Що біжить, але не має ніг?", a: "Вода або час", options: ["Тінь", "Вода або час", "Вітер", "Дорога"] },
-            { q: "Що ніколи не саджали, але воно постійно росте?", a: "Нігті або волосся", options: ["Дерево", "Квітка", "Нігті або волосся", "Бур'ян"] },
+            { q: "Що ніколи не саджали, але воно постійно росте?", a: "Волосся", options: ["Дерево", "Квітка", "Волосся", "Бур'ян"] },
             { q: "Яке слово завжди звучить неправильно?", a: "«Неправильно»", options: ["Помилка", "«Неправильно»", "Тиша", "Луна"] },
             { q: "У кімнаті чотири кути. У кожному сидить кіт. Навпроти кожного кота — три коти. Скільки котів?", a: "Чотири", options: ["Дванадцять", "Чотири", "Вісім", "Шістнадцять"] },
             { q: "У клітці 3 папуги. Троє дівчат попросили по одному папузі. Кожній дівчинці дали папугу, і все ж один папуга залишився у клітці. Як?", a: "Одній дівчинці дали папугу разом із кліткою", options: ["Хтось відмовився", "Принесли ще одного", "Одній дівчинці дали папугу разом із кліткою", "Папуга втік"] },
             { q: "У тата Станіслава троє дітей. Старшу сестру звуть Світлана, молодшого брата Олексій. Як звуть середню дитину?", a: "Станіслав", options: ["Іван", "Андрій", "Станіслав", "Петро"] },
-            { q: "Як дві людини переправилися на протилежний берег річки, якщо човен міг витримати лише одного?", a: "Вони були на різних берегах з самого початку", options: ["Один плив кролем", "Побудували міст", "Вони були на різних берегах з самого початку", "Човен не тонув"] },
+            { q: "Як дві людини переправилися на протилежний берег річки, якщо човен міг витримати лише одного?", a: "Вони були на різних берегах", options: ["Один плив кролем", "Побудували міст", "Вони були на різних берегах", "Човен не тонув"] },
             { q: "Бочка з водою важить 50 кг. Що потрібно з неї зробити, щоб вона важила 15 кг?", a: "Вилити воду", options: ["Додати льоду", "Вилити воду", "Нагріти її", "Розбити"] },
             { q: "Електропоїзд їде за вітром. Куди йде дим?", a: "У електропоїзда немає диму", options: ["Назад", "Вгору", "У електропоїзда немає диму", "За вітром"] },
             { q: "На яких мишок не полюють кішки?", a: "На комп’ютерних", options: ["На польових", "На іграшкових", "На комп’ютерних", "На маленьких"] },
-            { q: "У якого слона немає хобота?", a: "У шахового слона", options: ["У маленького", "У іграшкового", "У шахового слона", "У морського"] },
+            { q: "У якого слона немає хобота?", a: "У шахового", options: ["У маленького", "У іграшкового", "У шахового", "У морського"] },
             { q: "Як запалити свічку під водою?", a: "У підводному човні", options: ["Ніяк", "Спеціальним клеєм", "У підводному човні", "У склянці"] },
             { q: "Як помістити два літри молока в літрову банку?", a: "Заморозити або зробити сир", options: ["Налити доверху", "Заморозити або зробити сир", "Використати дві банки", "Ніяк"] },
             { q: "Що має дві букви, іноді п’ять, а сьогодні вісім?", a: "Слово «слово»", options: ["Алфавіт", "Слово «слово»", "Час", "Загадка"] },
@@ -210,10 +244,10 @@
             { q: "Що може бути простим і складним одночасно?", a: "Математична задача", options: ["Механізм", "Задача", "Життя", "Слово"] },
             { q: "Що можна поділити, але не можна з’їсти?", a: "Усмішку", options: ["Пиріг", "Усмішку", "Секрет", "Радість"] },
             { q: "Що можна зламати, але не можна розбити?", a: "Обіцянку", options: ["Скло", "Договір", "Обіцянку", "Гілку"] },
-            { q: "Що може бути повним, але нічого не містити?", a: "Голова", options: ["Відро", "Голова", "Коробка", "Мішок"] },
+            { q: "Що може бути повним, але нічого не містить?", a: "Голова", options: ["Відро", "Голова", "Коробка", "Мішок"] },
             { q: "Що може бігти, але не вміє бігати?", a: "Вода", options: ["Кіт", "Вода", "Дитина", "Авто"] },
             { q: "Чим більше з неї береш, тим більшою вона стає?", a: "Яма", options: ["Хмара", "Яма", "Скарбничка", "Пам'ять"] },
-            { q: "Що ніколи не саджали, але воно постійно росте?", a: "Волосся", options: ["Дерево", "Квітка", "Волосся", "Бур'ян"] },
+            { q: "Що ніколи не саджали, але воно постійно росте?", a: "Нігті або волосся", options: ["Дерево", "Квітка", "Волосся", "Бур'ян"] },
             { q: "Як дві людини переправилися на протилежний берег річки, якщо човен міг витримати лише одного?", a: "Вони були на різних берегах", options: ["Один плив кролем", "Побудували міст", "Вони були на різних берегах", "Човен не тонув"] },
             { q: "У якого слона немає хобота?", a: "У шахового", options: ["У маленького", "У іграшкового", "У шахового", "У морського"] },
             { q: "Як запалити свічку під водою?", a: "У підводному човні", options: ["Ніяк", "Спеціальним клеєм", "У підводному човні", "У склянці"] }
@@ -247,6 +281,14 @@
             counterTotal: document.getElementById('counter-total'),
             counterSeen: document.getElementById('counter-seen')
         };
+
+        function openSources() {
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        function closeSources() {
+            document.getElementById('modal-overlay').classList.remove('active');
+        }
 
         function setMode(newMode) {
             state.mode = newMode;
