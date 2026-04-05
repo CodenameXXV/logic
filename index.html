@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Логічні Загадки — Мультирежим</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            filter: blur(120px);
+            opacity: 0.15;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .answer-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, opacity 0.4s ease;
+            opacity: 0;
+        }
+
+        .answer-container.show {
+            max-height: 200px;
+            opacity: 1;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mode-btn.active {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #6366f1;
+        }
+
+        .quiz-option {
+            transition: all 0.2s ease;
+        }
+
+        .quiz-option:hover:not(:disabled) {
+            background-color: rgba(99, 102, 241, 0.1);
+            border-color: #6366f1;
+        }
+
+        .correct { background-color: rgba(16, 185, 129, 0.4) !important; border-color: #10b981 !important; color: #10b981; font-weight: bold; }
+        .wrong { background-color: rgba(239, 68, 68, 0.4) !important; border-color: #ef4444 !important; color: #ef4444; }
+
+        #timer-bar {
+            transition: width 0.1s linear;
+        }
+
+        .site-footer a {
+            color: #6366f1;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .site-footer a:hover {
+            color: #818cf8;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+    
+    <div class="blob -top-48 -left-48"></div>
+    <div class="blob -bottom-48 -right-48"></div>
+
+    <main class="z-10 w-full max-w-2xl flex-grow flex flex-col justify-center">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent mb-6">
+                Логічний Тренажер
+            </h1>
+            
+            <div class="flex flex-wrap justify-center gap-2 mb-8">
+                <button onclick="setMode('classic')" id="mode-classic" class="mode-btn px-4 py-2 rounded-full border border-slate-700 bg-slate-800/50 text-slate-400 text-sm font-semibold transition-all">Класика</button>
+                <button onclick="setMode('quiz')" id="mode-quiz" class="mode-btn px-4 py-2 rounded-full border border-slate-700 bg-slate-800/50 text-slate-400 text-sm font-semibold transition-all">Вікторина (12)</button>
+                <button onclick="setMode('marathon')" id="mode-marathon" class="mode-btn px-4 py-2 rounded-full border border-slate-700 bg-slate-800/50 text-slate-400 text-sm font-semibold transition-all">Марафон (12)</button>
+            </div>
+        </header>
+
+        <div id="stats-bar" class="flex justify-between items-center mb-4 px-2 text-sm font-medium text-slate-400">
+            <div id="score-display" class="hidden">Рахунок: <span id="score" class="text-indigo-400">0</span></div>
+            <div id="timer-display" class="hidden flex items-center gap-2">
+                <span>Час:</span>
+                <div class="w-32 h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div id="timer-bar" class="h-full bg-indigo-500" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="riddle-card" class="glass-card p-8 md:p-12 rounded-3xl shadow-2xl relative overflow-hidden fade-in">
+            <div class="relative z-10 flex flex-col items-center text-center">
+                <div class="flex items-center gap-2 mb-6 text-indigo-400 font-medium">
+                    <span id="counter-seen" class="flex items-center justify-center min-w-8 h-8 px-2 rounded-lg bg-indigo-500/20 text-sm">1</span>
+                    <span class="text-slate-500">з</span>
+                    <span id="counter-total" class="text-slate-300">0</span>
+                </div>
+
+                <h2 id="riddle-text" class="text-xl md:text-2xl font-medium leading-relaxed mb-10 min-h-[80px] flex items-center justify-center">
+                    Завантаження...
+                </h2>
+
+                <div id="classic-ui" class="w-full space-y-4">
+                    <button id="toggle-answer" class="w-full py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 font-semibold text-lg bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/25">
+                        Показати відповідь
+                    </button>
+                    <div id="answer-container" class="answer-container">
+                        <div class="mt-4 p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 text-xl font-bold">
+                            <span id="answer-text"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="quiz-ui" class="hidden w-full grid grid-cols-1 gap-3"></div>
+            </div>
+        </div>
+
+        <div class="mt-10 mb-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
+            <button id="next-btn" class="group flex items-center gap-3 px-8 py-4 bg-white text-slate-900 rounded-full font-bold text-lg hover:bg-slate-200 transition-all shadow-xl hover:scale-105 active:scale-95">
+                <span id="next-btn-text">Далі</span>
+            </button>
+            <div id="remaining-text" class="text-slate-500 text-sm font-medium"></div>
+        </div>
+    </main>
+
+    <footer class="site-footer w-full py-8 text-slate-500 text-sm text-center border-t border-slate-800/50 mt-8">
+        Автор: <a href="https://codenamexxv.github.io/teacher/" target="_blank" rel="noopener">Ігор Шуляк</a><br>
+        © 2026 Логічні Загадки • <span id="mode-name">Класичний режим</span>
+    </footer>
+
+    <script>
+        const RIDDLES_DATA = [
+            { q: "З якого крана не можна помити руки?", a: "З будівельного", options: ["З холодного", "З несправного", "З будівельного", "З порожнього"] },
+            { q: "Який годинник показує правильний час лише двічі на добу?", a: "Зламаний, який зупинився", options: ["Сонячний", "Зламаний, який зупинився", "Пісочний", "Електронний"] },
+            { q: "Летіли качки: одна попереду і дві позаду, одна позаду і дві попереду, одна між двома і три в ряд. Скільки качок?", a: "Три", options: ["Дві", "Три", "Шість", "Сім"] },
+            { q: "Що ти тримаєш в роті, але ніколи не зможеш проковтнути?", a: "Свій язик", options: ["Зуби", "Воду", "Свій язик", "Повітря"] },
+            { q: "З якого крану не тече вода?", a: "З будівельного", options: ["Зі зламаного", "З сухого", "З будівельного", "З порожнього"] },
+            { q: "Що можна утримувати без допомоги рук?", a: "Дихання", options: ["Вазу", "Дихання", "Рівновагу", "Сон"] },
+            { q: "Що можна побачити один раз за хвилину, двічі за мить і жодного разу за сто років?", a: "Літеру «м»", options: ["Зорю", "Літеру «м»", "Сонце", "Мить"] },
+            { q: "Що завжди перед вами, але ви цього не бачите?", a: "Майбутнє", options: ["Ніс", "Майбутнє", "Повітря", "Минуле"] },
+            { q: "Що можна зламати, навіть не торкаючись?", a: "Обіцянку", options: ["Скло", "Обіцянку", "Гілку", "Мовчання"] },
+            { q: "Чим більше з неї береш, тим більшою вона стає?", a: "Яма", options: ["Хмара", "Яма", "Скарбничка", "Пам'ять"] },
+            { q: "Що біжить, але не має ніг?", a: "Вода або час", options: ["Тінь", "Вода або час", "Вітер", "Дорога"] },
+            { q: "Що ніколи не саджали, але воно постійно росте?", a: "Нігті або волосся", options: ["Дерево", "Квітка", "Нігті або волосся", "Бур'ян"] },
+            { q: "Яке слово завжди звучить неправильно?", a: "«Неправильно»", options: ["Помилка", "«Неправильно»", "Тиша", "Луна"] },
+            { q: "У кімнаті чотири кути. У кожному сидить кіт. Навпроти кожного кота — три коти. Скільки котів?", a: "Чотири", options: ["Дванадцять", "Чотири", "Вісім", "Шістнадцять"] },
+            { q: "У клітці 3 папуги. Троє дівчат попросили по одному папузі. Кожній дівчинці дали папугу, і все ж один папуга залишився у клітці. Як?", a: "Одній дівчинці дали папугу разом із кліткою", options: ["Хтось відмовився", "Принесли ще одного", "Одній дівчинці дали папугу разом із кліткою", "Папуга втік"] },
+            { q: "У тата Станіслава троє дітей. Старшу сестру звуть Світлана, молодшого брата Олексій. Як звуть середню дитину?", a: "Станіслав", options: ["Іван", "Андрій", "Станіслав", "Петро"] },
+            { q: "Як дві людини переправилися на протилежний берег річки, якщо човен міг витримати лише одного?", a: "Вони були на різних берегах з самого початку", options: ["Один плив кролем", "Побудували міст", "Вони були на різних берегах з самого початку", "Човен не тонув"] },
+            { q: "Бочка з водою важить 50 кг. Що потрібно з неї зробити, щоб вона важила 15 кг?", a: "Вилити воду", options: ["Додати льоду", "Вилити воду", "Нагріти її", "Розбити"] },
+            { q: "Електропоїзд їде за вітром. Куди йде дим?", a: "У електропоїзда немає диму", options: ["Назад", "Вгору", "У електропоїзда немає диму", "За вітром"] },
+            { q: "На яких мишок не полюють кішки?", a: "На комп’ютерних", options: ["На польових", "На іграшкових", "На комп’ютерних", "На маленьких"] },
+            { q: "У якого слона немає хобота?", a: "У шахового слона", options: ["У маленького", "У іграшкового", "У шахового слона", "У морського"] },
+            { q: "Як запалити свічку під водою?", a: "У підводному човні", options: ["Ніяк", "Спеціальним клеєм", "У підводному човні", "У склянці"] },
+            { q: "Як помістити два літри молока в літрову банку?", a: "Заморозити або зробити сир", options: ["Налити доверху", "Заморозити або зробити сир", "Використати дві банки", "Ніяк"] },
+            { q: "Що має дві букви, іноді п’ять, а сьогодні вісім?", a: "Слово «слово»", options: ["Алфавіт", "Слово «слово»", "Час", "Загадка"] },
+            { q: "Що робити, якщо ноги в авто не дотягуються до педалей?", a: "Пересісти на водійське сидіння", options: ["Викликати таксі", "Пересісти на водійське сидіння", "Купити нове авто", "Плакати"] },
+            { q: "Що можна з’їсти, але не можна надкусити?", a: "Слово", options: ["Повітря", "Воду", "Слово", "Сон"] },
+            { q: "Що завжди правильне, навіть якщо помиляється?", a: "Компас", options: ["Вчитель", "Годинник", "Компас", "Дзеркало"] },
+            { q: "Що можна розділити, але не можна зменшити?", a: "Увагу", options: ["Торт", "Увагу", "Гроші", "Відстань"] },
+            { q: "Що ніколи не старіє, але завжди змінюється?", a: "Мода", options: ["Людина", "Мода", "Камінь", "Сонце"] },
+            { q: "Що може бути коротким і довгим одночасно?", a: "Шлях", options: ["Олівець", "Шлях", "День", "Розмова"] },
+            { q: "Що має форму, але не має тіла?", a: "Тінь", options: ["Вода", "Тінь", "Вітер", "Думка"] },
+            { q: "У дворі 3 собаки і 4 коти. Скільки лап у дворі?", a: "28 лап", options: ["14 лап", "24 лапи", "28 лап", "7 лап"] },
+            { q: "Що можна зламати, але не відремонтувати?", a: "Обіцянку", options: ["Стілець", "Обіцянку", "Серце", "Гілку"] },
+            { q: "Що завжди вгорі, але ніколи не внизу?", a: "Небо", options: ["Дах", "Небо", "Сонце", "Хмара"] },
+            { q: "Що може бути заповненим, але нічого не містить?", a: "Голова", options: ["Склянка", "Коробка", "Голова", "Кишеня"] },
+            { q: "Що можна додати, але не можна відняти?", a: "Сльози", options: ["Сіль", "Цукор", "Сльози", "Воду"] },
+            { q: "Що може бігти, але не вміє бігати?", a: "Річка", options: ["Кінь", "Річка", "Час", "Спортсмен"] },
+            { q: "Що можна побачити з закритими очима?", a: "Сон", options: ["Темряву", "Сон", "Світло", "Нічого"] },
+            { q: "Що важче: кілограм пір’я чи кілограм металу?", a: "Одинаково", options: ["Метал", "Пір’я", "Одинаково", "Залежить від ваг"] },
+            { q: "Яке число ділиться на будь‑яке натуральне число без остачі?", a: "0", options: ["1", "0", "10", "100"] },
+            { q: "Що можна зробити, щоб воно стало більшим, але не вагало більше?", a: "Збільшити шрифт", options: ["Надути", "Збільшити шрифт", "Пофарбувати", "Нагріти"] },
+            { q: "Що можна з’їсти, але не можна тримати?", a: "Морозиво", options: ["Яблуко", "Морозиво", "Суп", "Слово"] },
+            { q: "Що завжди зростає, але ніколи не зменшується?", a: "Вік", options: ["Дерево", "Вік", "Ціна", "Борг"] },
+            { q: "Що можна знайти в темряві, але не можна побачити на світлі?", a: "Тінь", options: ["Зорі", "Тінь", "Сон", "Нічого"] },
+            { q: "Що можна витратити, але не можна зберегти?", a: "Час", options: ["Гроші", "Час", "Енергію", "Сили"] },
+            { q: "Що можна розбити, не торкаючись?", a: "Мрію", options: ["Скло", "Мрію", "Серце", "Вазу"] },
+            { q: "Що може бути відкритим, але не мати дверей?", a: "Рот", options: ["Вікно", "Рот", "Книга", "План"] },
+            { q: "Що завжди в центрі, але ніколи не рухається?", a: "Центр кола", options: ["Сонце", "Центр кола", "Вісь", "Ядро"] },
+            { q: "Що може бути розміром з горошину, але важити тонну?", a: "Брудна монета", options: ["Атом", "Брудна монета", "Перлина", "Куля"] },
+            { q: "Що можна зробити, щоб воно стало більшим, але не важчим?", a: "Збільшити об’єм повітряної кулі", options: ["Налити води", "Збільшити об’єм кулі", "Пофарбувати", "Стиснути"] },
+            { q: "Що може бути простим і складним одночасно?", a: "Математична задача", options: ["Механізм", "Задача", "Життя", "Слово"] },
+            { q: "Що можна поділити, але не можна з’їсти?", a: "Усмішку", options: ["Пиріг", "Усмішку", "Секрет", "Радість"] },
+            { q: "Що можна зламати, але не можна розбити?", a: "Обіцянку", options: ["Скло", "Договір", "Обіцянку", "Гілку"] },
+            { q: "Що може бути повним, але нічого не містити?", a: "Голова", options: ["Відро", "Голова", "Коробка", "Мішок"] },
+            { q: "Що може бігти, але не вміє бігати?", a: "Вода", options: ["Кіт", "Вода", "Дитина", "Авто"] },
+            { q: "Чим більше з неї береш, тим більшою вона стає?", a: "Яма", options: ["Хмара", "Яма", "Скарбничка", "Пам'ять"] },
+            { q: "Що ніколи не саджали, але воно постійно росте?", a: "Волосся", options: ["Дерево", "Квітка", "Волосся", "Бур'ян"] },
+            { q: "Як дві людини переправилися на протилежний берег річки, якщо човен міг витримати лише одного?", a: "Вони були на різних берегах", options: ["Один плив кролем", "Побудували міст", "Вони були на різних берегах", "Човен не тонув"] },
+            { q: "У якого слона немає хобота?", a: "У шахового", options: ["У маленького", "У іграшкового", "У шахового", "У морського"] },
+            { q: "Як запалити свічку під водою?", a: "У підводному човні", options: ["Ніяк", "Спеціальним клеєм", "У підводному човні", "У склянці"] }
+        ];
+
+        let state = {
+            mode: 'classic',
+            remainingIndices: [],
+            currentIndex: null,
+            seenCount: 0,
+            score: 0,
+            timer: null,
+            timeLeft: 10,
+            canAnswer: true,
+            totalLimit: 0
+        };
+
+        const elements = {
+            riddleText: document.getElementById('riddle-text'),
+            answerText: document.getElementById('answer-text'),
+            answerContainer: document.getElementById('answer-container'),
+            toggleBtn: document.getElementById('toggle-answer'),
+            nextBtn: document.getElementById('next-btn'),
+            quizUi: document.getElementById('quiz-ui'),
+            classicUi: document.getElementById('classic-ui'),
+            scoreDisplay: document.getElementById('score-display'),
+            timerDisplay: document.getElementById('timer-display'),
+            timerBar: document.getElementById('timer-bar'),
+            scoreVal: document.getElementById('score'),
+            modeName: document.getElementById('mode-name'),
+            counterTotal: document.getElementById('counter-total'),
+            counterSeen: document.getElementById('counter-seen')
+        };
+
+        function setMode(newMode) {
+            state.mode = newMode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`mode-${newMode}`).classList.add('active');
+            
+            elements.classicUi.classList.toggle('hidden', newMode !== 'classic');
+            elements.quizUi.classList.toggle('hidden', newMode === 'classic');
+            elements.scoreDisplay.classList.toggle('hidden', newMode === 'classic');
+            elements.timerDisplay.classList.toggle('hidden', newMode !== 'marathon');
+            
+            elements.modeName.textContent = {
+                classic: "Класичний режим",
+                quiz: "Режим Вікторини",
+                marathon: "Марафон на час"
+            }[newMode];
+
+            initGame();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            clearInterval(state.timer);
+            
+            let pool = Array.from({ length: RIDDLES_DATA.length }, (_, i) => i);
+            shuffle(pool);
+
+            if (state.mode === 'quiz' || state.mode === 'marathon') {
+                state.remainingIndices = pool.slice(0, 12);
+                state.totalLimit = 12;
+            } else {
+                state.remainingIndices = pool;
+                state.totalLimit = RIDDLES_DATA.length;
+            }
+
+            state.seenCount = 0;
+            state.score = 0;
+            elements.scoreVal.textContent = "0";
+            elements.counterTotal.textContent = state.totalLimit;
+            nextRiddle();
+        }
+
+        function nextRiddle() {
+            if (state.remainingIndices.length === 0) {
+                elements.riddleText.innerHTML = `
+                    <div class="space-y-4">
+                        <p class="text-2xl font-bold text-indigo-400">Чудова робота!</p>
+                        <p class="text-lg">Гру завершено. Ваш результат: <span class="text-white font-bold">${state.score}</span> балів.</p>
+                    </div>
+                `;
+                elements.quizUi.innerHTML = "";
+                document.getElementById('next-btn-text').textContent = "Почати знову";
+                elements.nextBtn.onclick = initGame;
+                return;
+            }
+
+            elements.nextBtn.onclick = nextRiddle;
+
+            state.canAnswer = true;
+            state.currentIndex = state.remainingIndices.pop();
+            state.seenCount++;
+            
+            const current = RIDDLES_DATA[state.currentIndex];
+            
+            const card = document.getElementById('riddle-card');
+            card.classList.remove('fade-in');
+            void card.offsetWidth;
+            card.classList.add('fade-in');
+
+            elements.riddleText.textContent = current.q;
+            elements.counterSeen.textContent = state.seenCount;
+            document.getElementById('remaining-text').textContent = `Залишилось: ${state.remainingIndices.length}`;
+            document.getElementById('next-btn-text').textContent = "Наступне";
+
+            if (state.mode === 'classic') {
+                elements.answerText.textContent = current.a;
+                elements.answerContainer.classList.remove('show');
+                elements.toggleBtn.textContent = "Показати відповідь";
+            } else {
+                renderQuizOptions(current);
+            }
+
+            if (state.mode === 'marathon') {
+                startTimer();
+            }
+        }
+
+        function renderQuizOptions(riddle) {
+            elements.quizUi.innerHTML = "";
+            const options = shuffle([...riddle.options]);
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "quiz-option w-full p-4 rounded-xl border border-slate-700 bg-slate-800/40 text-left font-medium hover:bg-slate-700/50 transition-all";
+                btn.textContent = opt;
+                btn.onclick = () => handleQuizAnswer(opt, riddle.a, btn);
+                elements.quizUi.appendChild(btn);
+            });
+        }
+
+        function normalizeText(text) {
+            if (!text) return "";
+            return text.replace(/[.«»"']/g, '').trim().toLowerCase();
+        }
+
+        function handleQuizAnswer(selected, correct, btn) {
+            if (!state.canAnswer) return;
+            state.canAnswer = false;
+            clearInterval(state.timer);
+
+            const normSelected = normalizeText(selected);
+            const normCorrect = normalizeText(correct);
+            
+            const isCorrect = normSelected === normCorrect || (normCorrect.includes(normSelected) && normSelected.length > 3);
+            
+            if (isCorrect) {
+                state.score += 10;
+                if (btn) btn.classList.add('correct');
+            } else {
+                if (btn) btn.classList.add('wrong');
+                Array.from(elements.quizUi.children).forEach(b => {
+                    if (normalizeText(b.textContent) === normCorrect) {
+                        b.classList.add('correct');
+                    }
+                });
+            }
+            elements.scoreVal.textContent = state.score;
+        }
+
+        function startTimer() {
+            state.timeLeft = 10;
+            elements.timerBar.style.width = "100%";
+            clearInterval(state.timer);
+            
+            state.timer = setInterval(() => {
+                state.timeLeft -= 0.1;
+                const percent = (state.timeLeft / 10) * 100;
+                elements.timerBar.style.width = `${percent}%`;
+
+                if (state.timeLeft <= 0) {
+                    clearInterval(state.timer);
+                    handleQuizAnswer(null, RIDDLES_DATA[state.currentIndex].a, null);
+                }
+            }, 100);
+        }
+
+        elements.toggleBtn.onclick = () => {
+            elements.answerContainer.classList.toggle('show');
+            const isShow = elements.answerContainer.classList.contains('show');
+            elements.toggleBtn.textContent = isShow ? "Сховати відповідь" : "Показати відповідь";
+        };
+
+        window.onload = () => {
+            setMode('classic');
+        };
+    </script>
+</body>
+</html>
