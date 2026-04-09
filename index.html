@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Логічні Загадки — Мультирежим</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/CodenameXXV/logic/refs/heads/main/logic.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -101,10 +102,66 @@
         #modal-overlay.active {
             display: flex;
         }
+
+        /* Fullscreen toggle button styles */
+        #fullscreen-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 50;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(51, 65, 85, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #94a3b8;
+        }
+
+        #fullscreen-btn:hover {
+            background: rgba(51, 65, 85, 0.9);
+            color: #6366f1;
+            transform: scale(1.05);
+        }
+
+        #fullscreen-btn:active {
+            transform: scale(0.95);
+        }
+
+        .fullscreen-icon {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        /* Hide fullscreen button when in fullscreen on mobile for better UX */
+        @media (max-width: 640px) {
+            #fullscreen-btn {
+                width: 40px;
+                height: 40px;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
     
+    <!-- Fullscreen Toggle Button -->
+    <button id="fullscreen-btn" title="На весь екран" onclick="toggleFullscreen()">
+        <!-- Expand Icon (default) -->
+        <svg id="icon-expand" class="fullscreen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+        </svg>
+        <!-- Collapse Icon (hidden by default) -->
+        <svg id="icon-collapse" class="fullscreen-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+        </svg>
+    </button>
+
     <div class="blob -top-48 -left-48"></div>
     <div class="blob -bottom-48 -right-48"></div>
 
@@ -201,9 +258,9 @@
             { q: "Електричка їде на схід зі швидкістю 80 км/годину. В який бік летить дим?", a: "Електрички не димлять", options: ["На захід", "На схід", "Вгору", "Електрички не димлять"] },
             { q: "На аркуші паперу написано число 86. Як збільшити це число на 12, нічого не закреслюючи і не дописуючи?", a: "Перевернувши листок", options: ["Подивитися у дзеркало", "Перевернувши листок", "Скласти папір", "Нагріти аркуш"] },
             { q: "Якою рукою потрібно розмішувати чай?", a: "Чай потрібно розмішувати ложкою", options: ["Правою", "Лівою", "Чай потрібно розмішувати ложкою", "Обома"] },
-            { q: "Що належить вам, проте інші користуються цим частіше, ніж ви самі?", a: "Ваше ім’я", options: ["Гроші", "Ваше ім’я", "Ваше фото", "Ваш телефон"] },
+            { q: "Що належить вам, проте інші користуються цим частіше, ніж ви самі?", a: "Ваше ім'я", options: ["Гроші", "Ваше ім'я", "Ваше фото", "Ваш телефон"] },
             { q: "Що робити, якщо ви сіли до машини і зібралися їхати, а ноги не дістають до педалей?", a: "Пересісти на сидіння водія", options: ["Купити нове авто", "Пересісти на сидіння водія", "Викликати евакуатор", "Надіти взуття на платформі"] },
-            { q: "«Зав’язати» можна, а розв’язати не вдасться.", a: "Розмова", options: ["Шнурки", "Вузол", "Розмова", "Стрічку"] },
+            { q: "«Зав'язати» можна, а розв'язати не вдасться.", a: "Розмова", options: ["Шнурки", "Вузол", "Розмова", "Стрічку"] },
             { q: "Про що завжди говорять у майбутньому?", a: "Про завтра", options: ["Про плани", "Про завтра", "Про мрії", "Про погоду"] },
             { q: "Не лід, а тане, не човен, а спливає.", a: "Зарплата", options: ["Хмара", "Зарплата", "Цукор", "Сіль"] },
             { q: "Що може водночас стояти й ходити, висіти і стояти, ходити й лежати?", a: "Годинник", options: ["Людина", "Тінь", "Годинник", "Кіт"] },
@@ -211,7 +268,7 @@
             { q: "Коли небо нижче від землі?", a: "Коли дивишся у воду", options: ["Вночі", "Коли дивишся у воду", "В горах", "Під час дощу"] },
             { q: "Що станеться з білою хустинкою, якщо її опустити в Червоне море?", a: "Намокне", options: ["Стане червоною", "Розчиниться", "Намокне", "Зникне"] },
             { q: "Як кота перетворити на кита?", a: "Замінити букву «о» на «и»", options: ["Нагодувати рибою", "Замінити букву «о» на «и»", "Кинути у воду", "Ніяк"] },
-            { q: "У морі плавало п’ять кораблів. Два кораблі пристали до берега. Скільки кораблів у морі?", a: "5 кораблів", options: ["3 кораблі", "5 кораблів", "2 кораблі", "Жодного"] },
+            { q: "У морі плавало п'ять кораблів. Два кораблі пристали до берега. Скільки кораблів у морі?", a: "5 кораблів", options: ["3 кораблі", "5 кораблів", "2 кораблі", "Жодного"] },
             { q: "Дві подружки грали в теніс 2 години. Скільки годин грала кожна з них?", a: "Дві години", options: ["Одну годину", "Дві години", "Чотири години", "Пів години"] },
             { q: "Яке слово у словнику написано неправильно?", a: "Це слово «неправильно»", options: ["Помилка", "Словник", "«Неправильно»", "Абетка"] },
             { q: "Що стане краще, якщо його потоптати?", a: "Стежина", options: ["Трава", "Стежина", "Килим", "Взуття"] },
@@ -277,6 +334,56 @@
             counterTotal: document.getElementById('counter-total'),
             counterSeen: document.getElementById('counter-seen')
         };
+
+        // Fullscreen toggle functionality
+        function toggleFullscreen() {
+            const btn = document.getElementById('fullscreen-btn');
+            const iconExpand = document.getElementById('icon-expand');
+            const iconCollapse = document.getElementById('icon-collapse');
+            
+            if (!document.fullscreenElement) {
+                // Enter fullscreen
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        // Listen for fullscreen change events
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('msfullscreenchange', updateFullscreenButton);
+
+        function updateFullscreenButton() {
+            const iconExpand = document.getElementById('icon-expand');
+            const iconCollapse = document.getElementById('icon-collapse');
+            const btn = document.getElementById('fullscreen-btn');
+            
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+                // In fullscreen mode - show collapse icon
+                iconExpand.classList.add('hidden');
+                iconCollapse.classList.remove('hidden');
+                btn.title = "Вийти з повноекранного режиму";
+            } else {
+                // Normal mode - show expand icon
+                iconExpand.classList.remove('hidden');
+                iconCollapse.classList.add('hidden');
+                btn.title = "На весь екран";
+            }
+        }
 
         function openSources() {
             document.getElementById('modal-overlay').classList.add('active');
@@ -446,6 +553,8 @@
 
         window.onload = () => {
             setMode('classic');
+            // Initialize fullscreen button state
+            updateFullscreenButton();
         };
     </script>
 </body>
